@@ -1,111 +1,61 @@
 #include "stdafx.h"
 #include "MatrixWorker.h"
+#include "vhf.h"
 #include <iostream>
+#include <Windows.h>
 
-namespace
+Matr CMatrixWorker::GetInnverseMatrix(Matr const & sourceMatrix, bool isMultyThreads, int threadsCount)
 {
-	void PrintMatrix(Matrix const& matrix)
-	{
-		for (auto &it : matrix)
-		{
-			for (auto & i : it)
-			{
-				std::cout << i << ", ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	Matrix MakeIdentityMatrix(size_t n)
-	{
-		Matrix matrix;
-		for (size_t i = 0; i < n; ++i)
-		{
-			std::vector<double> line(n, 0);
-			line[i] = 1;
-			matrix.push_back(line);
-		}
-		return matrix;
-	}
-
-	bool CheckMatrixOnSquare(Matrix const& matrix)
-	{
-		size_t n = matrix.size();
-		for (auto &line : matrix)
-		{
-			if (line.size() != n)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	void DivisionVec(std::vector<double> & vec, double number)
-	{
-		for (auto &it : vec)
-		{
-			it /= number;
-		}
-	}
-
-	std::vector<double> MultiplyVec(std::vector<double> const& vec, double number)
-	{
-		std::vector<double> result = vec;
-		for (auto &it : result)
-		{
-			it *= number;
-		}
-		return result;
-	}
-
-	void SubtractVecFromAnother(std::vector<double> const& subtrahend, std::vector<double> & vec, double num)
-	{
-		std::vector<double> subVec = MultiplyVec(subtrahend, num);
-		for (size_t i = 0; i < vec.size(); ++i)
-		{
-			vec[i] -= subVec[i];
-		}
-	}
-}
-
-CMatrixWorker::CMatrixWorker()
-{
-}
-
-
-CMatrixWorker::~CMatrixWorker()
-{
-}
-
-Matrix CMatrixWorker::GetInnverseMatrix(Matrix const & sourceMatrix)
-{
-	if (CheckMatrixOnSquare(sourceMatrix))
+	if (CMatrix::CheckMatrixOnSquare(sourceMatrix))
 	{
 		m_size = sourceMatrix.size();
-		m_usingMatrix = sourceMatrix;
-		m_identityMatrix = MakeIdentityMatrix(m_size);
-		CalculateProcess();
+		m_sourceMatrix = sourceMatrix;
+		m_identityMatrix = CMatrix::MakeIdentityMatrix(m_size);
+		CalculateProcess(isMultyThreads, threadsCount);
 	}
 	return m_identityMatrix;
 }
 
-void CMatrixWorker::CalculateProcess()
+void DoStep(Matr & identityMatrix, Matr & usingMatrix, size_t size, size_t posx, size_t posy)
 {
-	for (size_t i = 0; i < m_size; ++i)
+
+	for (size_t i = posx; i < posy; ++i)
 	{
-		DivisionVec(m_identityMatrix[i], m_usingMatrix[i][i]);
-		DivisionVec(m_usingMatrix[i], m_usingMatrix[i][i]);
-		std::cout << "DIVISION " << i << " line ON " << m_usingMatrix[i][i] << std::endl;
-		for (size_t j = 0; j < m_size; ++j)
+		vhf::DivisionVec(identityMatrix[i], usingMatrix[i][i]);
+		vhf::DivisionVec(usingMatrix[i], usingMatrix[i][i]);
+		for (size_t j = 0; j < size; ++j)
 		{
-			if (j != i)
-			{
-				SubtractVecFromAnother(m_identityMatrix[i], m_identityMatrix[j], m_usingMatrix[j][i]);
-				SubtractVecFromAnother(m_usingMatrix[i], m_usingMatrix[j], m_usingMatrix[j][i]);
-			}
+			CMatrix::LineProcess(usingMatrix, identityMatrix, i, j);
 		}
-		PrintMatrix(m_identityMatrix);
+	}
+}
+
+void CMatrixWorker::CalculateProcess(bool isMultyThreads, int threadsCount)
+{
+	SetProcessAffinityMask(GetCurrentProcess(), 3);
+
+	std::vector <std::thread> thrs;
+	thrs.resize(threadsCount);
+	if (isMultyThreads)
+	{
+		auto step = size_t(m_size / threadsCount);
+		for (size_t i = 0; i < threadsCount; ++i)
+		{
+			size_t x = i * step;
+			size_t y = x + step;
+			if (i == m_size - 1)
+			{
+				y = m_size;
+			}
+			thrs[i] = std::thread(DoStep, m_identityMatrix, m_sourceMatrix, m_size, x, y);
+		}
+		for (auto &it : thrs)
+		{
+			it.join();
+		}
+	}
+	else
+	{
+		DoStep(m_identityMatrix, m_sourceMatrix, m_size, 0, m_size);
 	}
 }

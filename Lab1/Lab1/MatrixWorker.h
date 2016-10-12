@@ -1,20 +1,18 @@
 #pragma once
+#include "Matrix.h"
 
-typedef std::vector<std::vector<double>> Matrix;
 
 class CMatrixWorker
 {
 public:
-	CMatrixWorker();
-	~CMatrixWorker();
-
-	Matrix GetInnverseMatrix(Matrix const& sourceMatrix);
+	Matr GetInnverseMatrix(Matr const& sourceMatrix, bool isMultyThreads, int threadsCount);
 
 private:
-	void CalculateProcess();
+	void CalculateProcess(bool isMultyThreads, int threadsCount);
 
-	Matrix m_usingMatrix;
-	Matrix m_identityMatrix;
+	//CMatrix m_usingMatrix;
+	Matr m_sourceMatrix;
+	Matr m_identityMatrix;
 	size_t m_size;
 };
 

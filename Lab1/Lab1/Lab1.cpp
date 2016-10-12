@@ -1,20 +1,44 @@
-// Lab1.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
 #include "MatrixWorker.h"
+#include <ctime>
+#include <random>
 
-const Matrix matrix = 
+Matr GetMatrix(size_t n)
 {
-	{3, 2, 3},
-	{4, 7, 6},
-	{7, 8, 8}
-};
+	std::mt19937 rng;
+	std::uniform_int_distribution<>num(0, 100);
+	Matr matrix;
+	matrix.resize(n);
+	for (size_t i = 0; i < n; ++i)
+	{
+		for (size_t j = 0; j < n; ++j)
+		{
+			matrix[i].push_back(num(rng));
+		}
+	}
+	return matrix;
+}
 
-int main()
+int main(int argc, char* argv[])
 {
+	if (argc == 1)
+	{
+		return 1;
+	}
+	Matr matrix = GetMatrix(1000);
 	CMatrixWorker worker;
-	auto matr = worker.GetInnverseMatrix(matrix);
+	size_t time = clock();
+	auto matr = worker.GetInnverseMatrix(matrix, true, std::atoi(argv[1]));
+	size_t finishTime = clock();
+	double processTime = (finishTime - time) / 1000.0;
+	std::cout << processTime << std::endl;
+	/*
+	time = clock();
+	matr = worker.GetInnverseMatrix(matrix, false, 1);
+	finishTime = clock();
+	processTime = (finishTime - time) / 1000.0;
+	std::cout << processTime << std::endl;
+	*/
     return 0;
 }
 
