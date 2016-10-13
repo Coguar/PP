@@ -2,6 +2,8 @@
 #include "MatrixWorker.h"
 #include <ctime>
 #include <random>
+#include <iostream>
+#include <Windows.h>
 
 Matr GetMatrix(size_t n)
 {
@@ -32,13 +34,11 @@ int main(int argc, char* argv[])
 	size_t finishTime = clock();
 	double processTime = (finishTime - time) / 1000.0;
 	std::cout << processTime << std::endl;
-	/*
 	time = clock();
 	matr = worker.GetInnverseMatrix(matrix, false, 1);
 	finishTime = clock();
 	processTime = (finishTime - time) / 1000.0;
 	std::cout << processTime << std::endl;
-	*/
-    return 0;
+	return 0;
 }
 

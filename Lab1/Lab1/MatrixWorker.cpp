@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "MatrixWorker.h"
 #include "vhf.h"
-#include <iostream>
-#include <Windows.h>
+
 
 Matr CMatrixWorker::GetInnverseMatrix(Matr const & sourceMatrix, bool isMultyThreads, int threadsCount)
 {
@@ -32,7 +31,6 @@ void DoStep(Matr & identityMatrix, Matr & usingMatrix, size_t size, size_t posx,
 
 void CMatrixWorker::CalculateProcess(bool isMultyThreads, int threadsCount)
 {
-	SetProcessAffinityMask(GetCurrentProcess(), 3);
 
 	std::vector <std::thread> thrs;
 	thrs.resize(threadsCount);
